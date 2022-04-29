@@ -1,0 +1,76 @@
+button {
+    font-size: 17px;
+    border: none;
+}
+
+button:hover {
+    background-color: lightgray;
+    cursor: pointer;
+}
+
+.solution-container {
+    font-size: 30px;
+}
+
+main {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+.game-and-definitions-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
+.inputs-container {
+    display: inline-block;
+    border: 0px solid black;
+    border-bottom-width: 1px;
+}
+
+.game-container ol li:first-child .inputs-container {
+    border-top-width: 1px;
+}
+
+.game-item {
+    width: 30px;
+    height: 30px;
+    margin: 0px;
+    padding: 0px;
+    border: 0px solid black;
+    border-left-width: 1px;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 20px;
+}
+
+.game-item.wrong {
+    background-color: red;
+}
+
+.game-item:last-child {
+    border-right-width: 1px;
+}
+
+.solution-box {
+    background-color: lightgray;
+}
+
+.solution-box.right {
+    background-color: lightgreen;
+}
+
+.definitions-container {
+    margin-left: 20px;
+    font-size: 20px;
+    background-color: lightblue;
+}
+
+.definitions-container ol li {
+    margin-bottom: 4px;
+}

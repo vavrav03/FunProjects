@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Křížovka</title>
+        <link href="general.css" rel="stylesheet" type="text/css" />
+        <link href="crosswords.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+        <header>
+            <a class="navbar-brand" href="/">DOMŮ</a>
+            <nav>
+                <button id="solve-button">Vyřeš křížovku</button>
+                <button id="check-solution">Zkontroluj řešení</button>
+            </nav>
+        </header>
+
+        <main>
+            <div class="solution-container">
+                <%= task.sentenceBefore%> [tajenka]<%= task.sentenceAfter%>
+            </div>
+            <div class="game-and-definitions-container">
+                <div class="game-container">
+					<ol>
+						<% for(let i = 0; i < task.parts.length; i++) { %>
+						<li>
+							<div class="inputs-container">
+							<% for(let j = 0; j < task.parts[i].word.length; j++) { %><input class="game-item <%= j === task.parts[i].solutionIndex ? 'solution-box' : '' %>"></input><% } %>
+							</div>
+						</li>
+						<% } %>
+					</ol>
+				</div>
+                <div class="definitions-container">
+                    <ol>
+                        <% for(const part of task.parts) { %>
+                        <li><%= part.definition%></li>
+                        <% } %>
+                    </ol>
+                </div>
+            </div>
+        </main>
+        <script>
+            const taskF = JSON.parse('<%- JSON.stringify(task) %>'); //EJS
+            let leftMaxGap = 0;
+            for (const part of taskF.parts) {
+                leftMaxGap = Math.max(leftMaxGap, part.solutionIndex);
+            }
+            //odsadí jednotlivé řádky křížovky tak, aby políčka tajenky byla nad sebou
+            const gameContainer = document.querySelector('.game-container');
+            const gameContainerList = document.querySelector('ol');
+            for (let i = 0; i < taskF.parts.length; i++) {
+                gameContainerList.children[i].style['padding-left'] = `${
+                    (leftMaxGap - taskF.parts[i].solutionIndex) * 30
+                }px`;
+            }
+
+            for (let index = 1; index < taskF.parts.length; index++) {
+                const topBegin =
+                    leftMaxGap - taskF.parts[index - 1].solutionIndex;
+                const topEnd =
+                    topBegin + taskF.parts[index - 1].word.length - 1;
+                const thisBegin = leftMaxGap - taskF.parts[index].solutionIndex;
+                const thisEnd = thisBegin + taskF.parts[index].word.length - 1;
+                const thisRow =
+                    gameContainerList.children[index].querySelector(
+                        '.inputs-container'
+                    );
+                for (let j = thisBegin; j < topBegin; j++) {
+                    thisRow.children[j - thisBegin].style['border-top-width'] =
+                        '1px';
+                } //levá část borderu navíc
+                for (let j = topEnd + 1; j <= thisEnd; j++) {
+                    thisRow.children[j - thisBegin].style['border-top-width'] =
+                        '1px';
+                } //pravá část borderu navíc
+                //správně vykreslí border, aby mezi každými dvěma políčky byl border tloušťky 1px (aby se bordery nikde nespojily) a jejich velikost nebyla dvojnásobná. Zbylé bordery jsou nastavitelné v CSS
+            }
+
+            const makeSolutionGreen = () => {
+                for (let i = 0; i < taskF.parts.length; i++) {
+                    const row =
+                        gameContainerList.children[i].querySelector(
+                            '.inputs-container'
+                        );
+                    row.children[taskF.parts[i].solutionIndex].classList.add(
+                        'right'
+                    );
+                }
+            };
+
+            const checkSolutionButton =
+                document.querySelector('#check-solution');
+            checkSolutionButton.addEventListener('click', () => {
+                let wrong = false;
+                for (let i = 0; i < taskF.parts.length; i++) {
+                    const row =
+                        gameContainerList.children[i].querySelector(
+                            '.inputs-container'
+                        );
+                    for (let j = 0; j < taskF.parts[i].word.length; j++) {
+                        row.children[j].classList.remove('wrong');
+                        row.children[j].classList.remove('right'); //pokud by bylo tlačítko zmačknuto několikrát za sebou, je nutné nejprve uklidit po minulém zmačknutí
+                        if (taskF.parts[i].word[j] != row.children[j].value) {
+                            wrong = true;
+                            row.children[j].classList.add('wrong');
+                            setTimeout((e) => {
+                                row.children[j].classList.remove('wrong');
+                            }, 3000); //Po sekundách smaže
+                        }
+                    }
+                }
+                if (!wrong) {
+                    makeSolutionGreen();
+                    alert('GRATULUJI - tajenka je: ' + taskF.solutionSpaced);
+                }
+            });
+
+            const solveButton = document.querySelector('#solve-button');
+            solveButton.addEventListener('click', () => {
+                for (let i = 0; i < taskF.parts.length; i++) {
+                    const row =
+                        gameContainerList.children[i].querySelector(
+                            '.inputs-container'
+                        );
+                    for (let j = 0; j < taskF.parts[i].word.length; j++) {
+                        console.log('f');
+                        row.children[j].value = taskF.parts[i].word[j];
+                    } //doplňí do tajenky písmena
+                }
+                makeSolutionGreen();
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Osmisměrka</title>
+        <link href="general.css" rel="stylesheet" type="text/css" />
+        <link href="word_find.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+        <header>
+            <a class="navbar-brand" href="/">DOMŮ</a>
+            <nav></nav>
+        </header>
+        <main>
+            <div class="solution">
+                <%= task.sentenceBefore%> [tajenka (<%= task.solution.length%>
+                písmen)]<%= task.sentenceAfter%>
+            </div>
+            <div class="game-and-words-container">
+                <div class="game-container">
+                    <% for(const sub of task.grid) { %>
+                    <div class="game-row">
+                        <% for(const el of sub) { %>
+                        <div class="game-item"><%= el %></div>
+                        <% } %>
+                    </div>
+                    <% } %>
+                </div>
+                <div class="words-container">
+                    <div class="finding">
+                        <h2>Hledaná slova</h2>
+                        <ul>
+                            <% for(const word of task.words) { %>
+                            <li><%= word.word %></li>
+                            <% } %>
+                        </ul>
+                    </div>
+                    <div class="found">
+                        <h2>Nalezená slova</h2>
+                        <ul></ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <script>
+            const gameContainer = document.querySelector('.game-container');
+            const findingWordsList = document.querySelector(
+                '.words-container .finding ul'
+            );
+            const foundWordsList = document.querySelector(
+                '.words-container .found ul'
+            );
+            const taskF = JSON.parse('<%- JSON.stringify(task) %>'); //EJS neumí injektnout multi-level objekt. Výsledkem je [object Object]. Je nutné tedy nechat EJS vygenerovat JSON objektu, ten uložit jako String a v prohlížeči ho zpět přeložit. Zároveň musí zde být apostrofy a ne uvozovky, protože v JSONU jsou uvozovky
+            let basePointRow = null; //souřadnice zeleného bodu
+            let basePointCol = null;
+            let redPointCounter = 0; //aktuální počet špatných výběrů
+
+            const makeActive = (el) => {
+                el.classList.add('active');
+            };
+
+            const makeWrong = (el) => {
+                if (redPointCounter == 0) {
+                    //aby vždy byla jen zelená a červená tečka. Nikdy ne více než 1 červená - nešly by smazat.
+                    redPointCounter++;
+                    el.classList.add('wrong');
+                }
+            };
+
+            const highlightLetterPermanent = (row, col) => {
+                gameContainer.children[row].children[col].classList.add(
+                    'crossed'
+                );
+            };
+
+            const removeExtraState = (el) => {
+                el.classList.remove('wrong');
+                el.classList.remove('active');
+            };
+
+            const resetBasePoint = () => {
+                basePointRow = null;
+                basePointCol = null;
+                redPointCounter = 0;
+            };
+
+            //metoda zvýrazní, co slovo na základě formátu z words.
+            const highlighWordPermanent = (wordData) => {
+                if (
+                    wordData.sRow != wordData.eRow &&
+                    wordData.sCol != wordData.eCol
+                ) {
+                    //Diagonály
+                    let leftRow = wordData.sRow;
+                    let leftCol = wordData.sCol;
+                    let rightCol = wordData.eCol;
+                    if (wordData.eCol < wordData.sCol) {
+                        leftRow = wordData.eRow;
+                        leftCol = wordData.eCol;
+                        rightCol = wordData.sCol;
+                    }
+                    if (
+                        wordData.sRow - wordData.sCol ==
+                        wordData.eRow - wordData.eCol
+                    ) {
+                        for (
+                            let row = leftRow, col = leftCol;
+                            col <= rightCol;
+                            row++, col++
+                        ) {
+                            highlightLetterPermanent(row, col);
+                        }
+                    } else {
+                        for (
+                            let row = leftRow, col = leftCol;
+                            col <= rightCol;
+                            row--, col++
+                        ) {
+                            highlightLetterPermanent(row, col);
+                        }
+                    }
+                } else if (wordData.sRow == wordData.eRow) {
+                    //v jednom řádku
+                    let min = Math.min(wordData.sCol, wordData.eCol);
+                    let max = Math.max(wordData.sCol, wordData.eCol);
+                    for (let i = min; i <= max; i++) {
+                        highlightLetterPermanent(wordData.sRow, i);
+                    }
+                } else if (wordData.sCol == wordData.eCol) {
+                    //v jednom sloupci
+                    let min = Math.min(wordData.sRow, wordData.eRow);
+                    let max = Math.max(wordData.sRow, wordData.eRow);
+                    for (let i = min; i <= max; i++) {
+                        highlightLetterPermanent(i, wordData.sCol);
+                    }
+                } else {
+                    console.log('ERROR, highlightPermanent');
+                }
+            };
+
+            const moveToFound = (word) => {
+                //přesun slova z listu hledaných slov do nalezených
+                let itemToDelete;
+                for (const item of findingWordsList.children) {
+                    if (item.textContent === word) {
+                        itemToDelete = item;
+                        break;
+                    }
+                }
+                if (itemToDelete) {
+                    //můžeme se snažit o znovuvyřazení již vyřazeného slova
+                    foundWordsList.appendChild(itemToDelete); //zároveň udělá remove (jedná se vlastně o move)
+                }
+            };
+
+            const checkWon = () => {
+                console.log(findingWordsList.children.length);
+                if (findingWordsList.children.length == 0) {
+                    alert('GRATULUJI - tajenka je: ' + taskF.solutionSpaced);
+                }
+            };
+
+            gameContainer.addEventListener('click', (e) => {
+                const src = e.srcElement;
+                if (src.classList[0] !== 'game-item') {
+                    return;
+                }
+                const col = Array.from(src.parentElement.children).indexOf(src);
+                const row = Array.from(
+                    src.parentElement.parentElement.children
+                ).indexOf(src.parentElement);
+                if (basePointRow == null) {
+                    //žádný bod není vybrán
+                    basePointRow = row;
+                    basePointCol = col;
+                    makeActive(src);
+                } else if (basePointRow == row && basePointCol == col) {
+                    resetBasePoint(); //kliknutí na ten samý bod podruhé
+                    removeExtraState(src);
+                } else {
+                    //kliknutí na jiný bod, když už je jeden vybraný
+                    let success = false;
+                    for (const wordData of taskF.words) {
+                        if (
+                            (basePointRow == wordData.sRow &&
+                                basePointCol == wordData.sCol &&
+                                wordData.eRow == row &&
+                                wordData.eCol == col) ||
+                            (basePointRow == wordData.eRow &&
+                                basePointCol == wordData.eCol &&
+                                wordData.sRow == row &&
+                                wordData.sCol == col)
+                        ) {
+                            //první a druhý označený bod vymezují nějaké slovo
+                            moveToFound(wordData.word);
+                            highlighWordPermanent(wordData);
+                            removeExtraState(
+                                gameContainer.children[basePointRow].children[
+                                    basePointCol
+                                ]
+                            );
+                            checkWon();
+                            basePointRow = null;
+                            basePointCol = null;
+                            success = true;
+                            break;
+                        }
+                    }
+                    if (!success) {
+                        //první a druhý bod nevymezily slovo a je třeba zobrazit neúspěch
+                        makeWrong(src);
+                        setTimeout(() => {
+                            removeExtraState(
+                                gameContainer.children[basePointRow].children[
+                                    basePointCol
+                                ]
+                            );
+                            removeExtraState(src);
+                            resetBasePoint();
+                        }, 500);
+                    } else {
+                        resetBasePoint();
+                    }
+                }
+            });
+
+            const getIndexOf = (el) => {
+                let divs = document.querySelectorAll('.flex div');
+                let index = Array.from(divs).indexOf(el);
+            };
+        </script>
+    </body>
+</html>
