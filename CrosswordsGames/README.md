@@ -1,4 +1,4 @@
-EN: This web app allows the user to play crossword puzzles and octagrams, which the program generates itself based on the dictionary. The project was created to practice server side rendering in NodeJS and vanilla javascript without React. Another reason was also that I always wanted to write my own algorithm to generate crosswords and octagrams
+EN: This web app allows the user to play crossword puzzles and octagrams, which the program generates itself based on the dictionary. The project was created to practice server side rendering in NodeJS and vanilla javascript without React. Another reason was also that I always wanted to write my own algorithm to generate crosswords and octagrams. Unfortunately, there is no good free crossword dictionary available anywhere on the internet. So I used a Czech-English dictionary as a substitute.
 
 Technologies used:<br />
 -NodeJS<br />
@@ -13,7 +13,7 @@ Function:
 -Creating an word-search generator<br />
 -Checking for correct solutions and giving hints
 
-CZ: Tato webová aplikace umožňuje uživateli hrát křížovky a osmisměrky, které program na základě slovníku sám vygeneruje. Projekt vznikl za účelem procvičení server side renderingu v NodeJS a celkově vanilla javascriptu bez Reactu. Dalším důvodem bylo také, že jsem si vždy chtěl napsat vlastní algoritmus na generování křížovek a osmisměrek
+CZ: Tato webová aplikace umožňuje uživateli hrát křížovky a osmisměrky, které program na základě slovníku sám vygeneruje. Projekt vznikl za účelem procvičení server side renderingu v NodeJS a celkově vanilla javascriptu bez Reactu. Dalším důvodem bylo také, že jsem si vždy chtěl napsat vlastní algoritmus na generování křížovek a osmisměrek. Bohužel není na internetu nikde dostupný dobrý křížovskářský slovník zdarma. Využil jsem tedy česko-anglický slov jako náhradu.
 
 Použité technologie:<br />
 -NodeJS <br />
